@@ -1,10 +1,12 @@
+from datetime import time
 import sqlite3
 
 def log_queries(func):
     def wrapper(*args,**kwargs):
-        print(f"calling {func.__name__}()")
+        start = time.time()
+        print(f"calling {func.__name__} with args={args}, kwargs={kwargs}")
         result = func(*args, **kwargs)
-        print(f"finished {func.__name__}()")
+        print(f"finished {func.__name__} in {time.time() - start:.2f}s")
         return result
     return wrapper
 @log_queries
