@@ -8,8 +8,10 @@ from parameterized import parameterized
 
 from client import GithubOrgClient
 
+
 class TestGithubOrgClient(unittest.TestCase):
-    """Test GithubOrgClient.org property."""
+    """Test GithubOrgClient methods and properties."""
+
     @parameterized.expand([
         ("google",),
         ("abc",)
@@ -29,22 +31,24 @@ class TestGithubOrgClient(unittest.TestCase):
         mock_get_json.assert_called_once_with(
             f"https://api.github.com/orgs/{org_name}"
         )
+
     def test_public_repos_url(self):
         """Test that _public_repos_url returns the correct repos URL."""
-        mocked_payload = {"repos_url": "https://api.github.com/orgs/google/repos"}
+        mocked_payload = {
+            "repos_url": "https://api.github.com/orgs/google/repos"
+        }
         with patch(
             "client.GithubOrgClient.org", new_callable=PropertyMock
         ) as mock_org:
             mock_org.return_value = mocked_payload
             client = GithubOrgClient("google")
             result = client._public_repos_url
-            self.assertEqual(result, "https://api.github.com/orgs/google/repos")
-class TestGithubOrgClient(unittest.TestCase):
-    """Test GithubOrgClient methods and properties."""
+            expected_url = "https://api.github.com/orgs/google/repos"
+            self.assertEqual(result, expected_url)
 
     @patch("client.get_json")
     def test_public_repos(self, mock_get_json):
-        """Test GithubOrgClient.public_repos returns expected repo names."""
+        """Test public_repos returns the expected list of repo names."""
         mock_get_json.return_value = [
             {"name": "repo1"},
             {"name": "repo2"},
@@ -52,12 +56,20 @@ class TestGithubOrgClient(unittest.TestCase):
         ]
 
         client = GithubOrgClient("google")
+
+        # Patch the property _public_repos_url
         with patch.object(
-            GithubOrgClient, "_public_repos_url", new_callable=PropertyMock
+            GithubOrgClient,
+            "_public_repos_url",
+            new_callable=PropertyMock
         ) as mock_url:
             mock_url.return_value = "https://api.github.com/orgs/google/repos"
+
             repos = client.public_repos
             expected = ["repo1", "repo2", "repo3"]
+
+            # Assert the results
             self.assertEqual(repos, expected)
-            mock_url.assert_called_once()        
-            mock_get_json.assert_called_once()  
+            # Assert the mocks were called
+            mock_url.assert_called_once()
+            mock_get_json.assert_called_once()
