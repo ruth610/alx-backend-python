@@ -74,3 +74,20 @@ class TestGithubOrgClient(unittest.TestCase):
             # Assert mocks (ALX requires at least one call, not exactly once)
             mock_url.assert_called()
             mock_get_json.assert_called()
+    @parameterized.expand([
+        (
+            {"license": {"key": "my_license"}},   # repo
+            "my_license",                         # license_key
+            True                                   # expected
+        ),
+        (
+            {"license": {"key": "other_license"}},
+            "my_license",
+            False
+        )
+    ])
+    def test_has_license(self, repo, license_key, expected):
+        """Test GithubOrgClient.has_license returns expected boolean."""
+        client = GithubOrgClient("google")
+        result = client.has_license(repo, license_key)
+        self.assertEqual(result, expected)
