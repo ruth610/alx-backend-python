@@ -3,10 +3,11 @@
 Unit tests for the GithubOrgClient class in client.py.
 """
 import unittest
-from unittest.mock import patch, PropertyMock
-from parameterized import parameterized
+from unittest.mock import patch, PropertyMock, MagicMock
+from parameterized import parameterized, parameterized_class
 
 from client import GithubOrgClient
+from fixtures import org_payload, repos_payload, expected_repos, apache2_repos
 
 
 class TestGithubOrgClient(unittest.TestCase):
@@ -91,3 +92,52 @@ class TestGithubOrgClient(unittest.TestCase):
         client = GithubOrgClient("google")
         result = client.has_license(repo, license_key)
         self.assertEqual(result, expected)
+@parameterized_class([
+    {
+        "org_payload": org_payload,
+        "repos_payload": repos_payload,
+        "expected_repos": expected_repos,
+        "apache2_repos": apache2_repos,
+    }
+])
+class TestIntegrationGithubOrgClient(unittest.TestCase):
+    """Integration tests for GithubOrgClient.public_repos."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Start patching requests.get and configure payload side effects."""
+        cls.get_patcher = patch("requests.get")
+
+        # Start the patcher → this replaces requests.get
+        mock_get = cls.get_patcher.start()
+
+        # Create a mock response object with .json() returning different payloads
+        mock_response = MagicMock()
+
+        def side_effect(url):
+            """
+            Decide which payload to return depending on the URL.
+            This mimics real API behavior.
+            """
+            if url.endswith("/orgs/google") or url.endswith("/orgs/abc"):
+                mock_response.json.return_value = cls.org_payload
+            elif url.endswith("/repos"):
+                mock_response.json.return_value = cls.repos_payload
+            return mock_response
+
+        mock_get.side_effect = side_effect
+
+    @classmethod
+    def tearDownClass(cls):
+        """Stop patching requests.get."""
+        cls.get_patcher.stop()
+
+    def test_public_repos(self):
+        """Test that public_repos returns all repo names."""
+        client = GithubOrgClient("google")
+        self.assertEqual(client.public_repos, self.expected_repos)
+
+    def test_public_repos_with_license(self):
+        """Test that public_repos filters repos by Apache-2.0 license."""
+        client = GithubOrgClient("google")
+        self.assertEqual(client._get_public_repos("apache-2.0"), self.apache2_repos)
