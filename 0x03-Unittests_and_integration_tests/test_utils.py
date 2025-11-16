@@ -17,6 +17,7 @@ from utils import access_nested_map, get_json, memoize
 
 
 class TestAccessNestedMap(unittest.TestCase):
+    """Test the `access_nested_map` function for correct behavior and exceptions."""
     @parameterized.expand(
         [
             ({"a": 1}, ("a",), 1),
@@ -35,6 +36,7 @@ class TestAccessNestedMap(unittest.TestCase):
 
 
 class TestGetJson(unittest.TestCase):
+    """Test the `get_json` function using mocked HTTP responses."""
     @parameterized.expand(
         [
             ("http://example.com", {"payload": True}),
@@ -55,6 +57,7 @@ class TestGetJson(unittest.TestCase):
 
 
 class TestMemoize(unittest.TestCase):
+    """Test the `memoize` decorator to ensure it caches results correctly."""
     def test_memoize(self):
         """Test that a memoized property caches the result"""
 
