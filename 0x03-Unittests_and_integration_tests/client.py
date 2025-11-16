@@ -29,7 +29,12 @@ class GithubOrgClient:
         repos = get_json(self._public_repos_url)
         if license is None:
             return [repo["name"] for repo in repos]
-        return [repo["name"] for repo in repos if self.has_license(repo, license)]
+        # FIX E501 (Line 34): Break list comprehension onto multiple lines
+        return [
+            repo["name"]
+            for repo in repos
+            if self.has_license(repo, license)
+        ]
 
     @property
     def public_repos(self) -> list:

@@ -7,7 +7,38 @@ from unittest.mock import patch, PropertyMock, MagicMock
 from parameterized import parameterized, parameterized_class
 
 from client import GithubOrgClient
-from fixtures import org_payload, repos_payload, expected_repos, apache2_repos
+
+# --- FIX: INLINED FIXTURES to resolve ImportError ---
+org_payload = {
+    "login": "google",
+    "id": 1,
+    "repos_url": "https://api.github.com/orgs/google/repos"
+}
+
+repos_payload = [
+    {
+        "id": 1,
+        "name": "repo1",
+        "license": {"key": "apache-2.0"}
+    },
+    {
+        "id": 2,
+        "name": "repo2",
+        "license": {"key": "mit"}
+    },
+    {
+        "id": 3,
+        "name": "repo3",
+        "license": {"key": "apache-2.0"}
+    }
+]
+
+expected_repos = ["repo1", "repo2", "repo3"]
+apache2_repos = ["repo1", "repo3"]
+# --- END FIXTURES ---
+
+# REMOVE: from fixtures import org_payload, repos_payload
+# expected_repos, apache2_repos
 
 
 class TestGithubOrgClient(unittest.TestCase):
@@ -31,7 +62,10 @@ class TestGithubOrgClient(unittest.TestCase):
 
     def test_public_repos_url(self):
         """Test that _public_repos_url returns the correct repos URL."""
-        mocked_payload = {"repos_url": "https://api.github.com/orgs/google/repos"}
+        # FIX E501: Shortened payload line
+        mocked_payload = {
+            "repos_url": "https://api.github.com/orgs/google/repos"
+        }
         with patch(
             "client.GithubOrgClient.org",
             new_callable=PropertyMock
@@ -95,9 +129,14 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
 
         # Side effect function to return correct payloads
         def side_effect(url):
+            # FIX E501 (Line 119) and Logical Error: Use
+            # the correct class variables
+            # FIX E501: Breaking long string
+            org_url = f"https://api.github.com/orgs/{cls.org_payload['login']}"
+
             if url == cls.org_payload["repos_url"]:
                 return cls.repos_payload
-            if url == f"https://api.github.com/orgs/{cls.org_payload['login']}":
+            if url == org_url:
                 return cls.org_payload
             return {}
 
@@ -116,4 +155,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
     def test_public_repos_with_license(self):
         """Test that public_repos filters repos by Apache-2.0 license."""
         client = GithubOrgClient(self.org_payload["login"])
-        self.assertEqual(client._public_repos(license="apache-2.0"), self.apache2_repos)
+        # The license filtering is done by calling the helper method
+        self.assertEqual(
+            client._public_repos(license="apache-2.0"), self.apache2_repos
+        )
