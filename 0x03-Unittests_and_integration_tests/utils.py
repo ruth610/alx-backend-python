@@ -1,4 +1,4 @@
-def access_nested_maps(nested_map,path):
+def access_nested_map(nested_map,path):
     value = nested_map
 
     for key in path:
