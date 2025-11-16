@@ -1,4 +1,13 @@
 #!/usr/bin/env python3
+"""
+This module contains unit tests for the following functions in utils.py:
+
+- access_nested_map
+- get_json
+- memoize
+
+Tests include normal cases, exceptions, and memoization behavior.
+"""
 import unittest
 from unittest.mock import Mock, patch
 
