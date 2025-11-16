@@ -29,7 +29,6 @@ class GithubOrgClient:
         repos = get_json(self._public_repos_url)
         if license is None:
             return [repo["name"] for repo in repos]
-        # FIX E501 (Line 34): Break list comprehension onto multiple lines
         return [
             repo["name"]
             for repo in repos
@@ -38,7 +37,7 @@ class GithubOrgClient:
 
     @property
     def public_repos(self) -> list:
-        """Property to return all public repo names (unfiltered)."""
+        """Return all public repo names (unfiltered)."""
         return self._public_repos()
 
     @staticmethod
