@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 class Role(models.TextChoices):
@@ -8,8 +9,12 @@ class Role(models.TextChoices):
     ADMIN = ['Admin','admin']
 
 
-class User(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+class User(AbstractUser):
+    """
+    Extends Django AbstractUser because the default User model
+    already includes: username, first_name, last_name, email, password
+    """
+    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=150, unique=True)
     phone_number = models.BigIntegerField(max_length=20, null=True, blank=True)
     role = models.CharField(
@@ -28,7 +33,7 @@ class User(models.Model):
 
 
 class Conversation(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    conversation_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     participants = models.ManyToManyField(
         User,
@@ -41,7 +46,7 @@ class Conversation(models.Model):
 
 
 class Message(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4,editable=False)
+    message_id = models.UUIDField(primary_key=True, default=uuid.uuid4,editable=False)
     sender = models.ForeignKey(
         User,
         on_delete= models.CASCADE,
