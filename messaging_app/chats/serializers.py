@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import User, Message, Conversation
 
 class UserSerializers(serializers.ModelSerializer):
+    phone_number = serializers.CharField(allow_null=True, required=False)
     def  validate_password(self, password):
         if password.length < 8:
             raise serializers.ValidationError(
@@ -61,6 +62,7 @@ class ConversationSerializers(serializers.ModelSerializer):
     )
 
     messages = MessageSerializers(many=True, read_only=True)
+    last_message = serializers.SerializerMethodField()
 
     class Meta:
         model = Conversation
