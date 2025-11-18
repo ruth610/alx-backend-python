@@ -31,7 +31,9 @@ class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializers
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['content']
+    search_fields = ['message_body']
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['created_at']
 
     def get_queryset(self):
         queryset = Message.objects.all()
