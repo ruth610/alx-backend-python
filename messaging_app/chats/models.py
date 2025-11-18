@@ -16,7 +16,7 @@ class User(AbstractUser):
     """
     user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=150, unique=True)
-    phone_number = models.BigIntegerField(max_length=20, null=True, blank=True)
+    phone_number = models.BigIntegerField(null=True, blank=True)
     role = models.CharField(
         max_length=10,
         choices=Role.choices,

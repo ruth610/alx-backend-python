@@ -1,6 +1,6 @@
 from warnings import filters
 from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Conversation, User, Message
@@ -30,8 +30,6 @@ class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessageSerializers
     permission_classes = [IsAuthenticated]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['message_body']
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['created_at']
 
