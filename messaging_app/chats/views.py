@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from .models import Conversation, User, Message
 from .serializers import ConversationSerializers, MessageSerializers
 from .permissions import IsMessageOwnerOrParticipant
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import filters
 
 
 # Create your views here.
@@ -14,7 +16,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all()              # default queryset (fallback)
     serializer_class = ConversationSerializers        # serializer that handles validation and (de)serialization
     permission_classes = [IsAuthenticated]            # only logged-in users can access
-
+    filterset_fields = ('messages')
     def get_queryset(self):
         user = self.request.user                       # the authenticated user making the request
         return Conversation.objects.filter(participants=user)  # only return conversations where the user participates
@@ -28,15 +30,19 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
 
 class MessageViewSet(viewsets.ModelViewSet):
-    queryset = Message.objects.all()
+    queryset = Message.objects.order_by('pk')
     serializer_class = MessageSerializers
     permission_classes = [IsMessageOwnerOrParticipant]
+    pagination_class = PageNumberPagination
+    pagination_class.page_size = 2
+    pagination_class.page_query_param = 'pagenum'
+    pagination_class.page_size_query_param = 'size'
     filter_backends = [filters.OrderingFilter]
+    filterset_fields = ['message_body']
     ordering_fields = ['created_at']
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Message.objects.all()
 
         conversation_id = self.request.query_params.get('conversation_id')
         if not conversation_id:
