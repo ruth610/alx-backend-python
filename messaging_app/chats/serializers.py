@@ -12,7 +12,7 @@ class UserSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'user_id',
+            'id',
             'first_name',
             'last_name',
             'email',
@@ -23,7 +23,8 @@ class UserSerializers(serializers.ModelSerializer):
 
 class MessageSerializers(serializers.ModelSerializer):
     sender = UserSerializers(read_only=True)
-    sender_id = serializers.UUIDField(write_only=True)
+    sender_id = UserSerializers(read_only=True)
+    conversation = serializers.PrimaryKeyRelatedField(read_only=True)
     def validate_message_body(self,message):
         if len(message.strip()) == 0:
             raise serializers.ValidationError(
@@ -35,7 +36,7 @@ class MessageSerializers(serializers.ModelSerializer):
         sender_id = data.get('sender_id')
         conversation = data.get('conversation')
 
-        if not conversation.participants.filter(user_id = sender_id).exists():
+        if not conversation.participants.filter(id = sender_id).exists():
             raise serializers.ValidationError(
                 'the sender is not part of this conversation'
             )
@@ -67,7 +68,7 @@ class ConversationSerializers(serializers.ModelSerializer):
     class Meta:
         model = Conversation
         fields = [
-            'conversation_id',
+            'id',
             'participants',
             'participants_id',
             'messages',

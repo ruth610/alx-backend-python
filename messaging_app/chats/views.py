@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Conversation, User, Message
 from .serializers import ConversationSerializers, MessageSerializers
+from .permissions import IsMessageOwnerOrParticipant
 
 
 # Create your views here.
@@ -29,22 +30,43 @@ class ConversationViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
     serializer_class = MessageSerializers
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsMessageOwnerOrParticipant]
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['created_at']
 
     def get_queryset(self):
+        user = self.request.user
         queryset = Message.objects.all()
+
         conversation_id = self.request.query_params.get('conversation_id')
-        if conversation_id:
-            queryset = Message.objects.filter(conversation_id=conversation_id)
+        if not conversation_id:
+            return Message.objects.none()
+
+        # Ensure only participants can see messages
+        return Message.objects.filter(
+            conversation__id=conversation_id,
+            conversation__participants=user
+        )
         return queryset
 
     def create(self, request, *args, **kwargs):
-        serializer = MessageSerializers(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+
+        conversation = serializer.validated_data["conversation"]
+
+        # Check user is in the conversation
+        if request.user not in conversation.participants.all():
+            return Response(
+                {"detail": "You are not a participant in this conversation."},
+                status=403
+            )
+
         message = serializer.save(sender=request.user)
 
-        return Response(MessageSerializers(message).data,status=201)
+        return Response(
+            MessageSerializers(message).data,
+            status=201
+        )
 
 

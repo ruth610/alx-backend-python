@@ -14,7 +14,7 @@ class User(AbstractUser):
     Extends Django AbstractUser because the default User model
     already includes: username, first_name, last_name, email, password
     """
-    user_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=150, unique=True)
     phone_number = models.BigIntegerField(null=True, blank=True)
     role = models.CharField(
@@ -24,8 +24,8 @@ class User(AbstractUser):
     )
     created_at = models.DateTimeField(auto_now=True)
 
-    EMAIL_FIELD = 'email',
-    USERNAME_FIELD = 'username',
+    EMAIL_FIELD = 'email'
+    USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
 
     def __str__(self):
@@ -33,7 +33,7 @@ class User(AbstractUser):
 
 
 class Conversation(models.Model):
-    conversation_id = models.UUIDField(
+    id = models.UUIDField(
         primary_key=True,
         default=uuid.uuid4,
         editable=False
