@@ -67,5 +67,26 @@ class MessageViewSet(viewsets.ModelViewSet):
             MessageSerializers(message).data,
             status=201
         )
+    def update(self, request, *args, **kwargs):
+        message = self.get_object()
+
+        if request.user not in message.conversation.participants.all():
+            return Response(
+                {"detail": "Forbidden"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        message = self.get_object()
+
+        if request.user not in message.conversation.participants.all():
+            return Response(
+                {"detail": "Forbidden"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        return super().destroy(request, *args, **kwargs)
 
 

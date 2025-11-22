@@ -4,10 +4,13 @@ from .models import Conversation
 class IsParticipantOfConversation(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Object-level permission: user must be the sender or a participant
-        return (
-            obj.sender == request.user or
-            request.user in obj.conversation.participants.all()
-        )
+        conversation = obj.conversation if isinstance(obj, Message) else obj
+
+        # Only participants allowed for all modifying methods
+        if request.method in ["GET", "POST", "PUT", "PATCH", "DELETE"]:
+            return request.user in conversation.participants.all()
+
+        return False
 
     def has_permission(self, request, view):
         # Must be authenticated
