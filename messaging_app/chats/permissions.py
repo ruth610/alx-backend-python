@@ -1,7 +1,7 @@
-from rest_framework.permissions import BasePermission
+from rest_framework import permissions
 from .models import Conversation
 
-class IsMessageOwnerOrParticipant(BasePermission):
+class IsMessageOwnerOrParticipant(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Object-level permission: user must be the sender or a participant
         return (
