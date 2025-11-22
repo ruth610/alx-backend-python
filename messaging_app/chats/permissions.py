@@ -1,7 +1,7 @@
 from rest_framework import permissions
 from .models import Conversation
 
-class IsMessageOwnerOrParticipant(permissions.BasePermission):
+class IsParticipantOfConversation(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Object-level permission: user must be the sender or a participant
         return (
@@ -10,13 +10,21 @@ class IsMessageOwnerOrParticipant(permissions.BasePermission):
         )
 
     def has_permission(self, request, view):
-        conversation_id = request.query_params.get("conversation_id")
+        # Must be authenticated
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        # For list/create — check conversation_id if provided
+        conversation_id = request.query_params.get("conversation_id") or \
+                          request.data.get("conversation")
+
         if not conversation_id:
-            return True  # allow post, list without convo ID (filtered in get_queryset)
+            # Allow auth user but queryset will restrict data anyway
+            return True
 
         try:
-            convo = Conversation.objects.get(id=conversation_id)
+            conversation = Conversation.objects.get(id=conversation_id)
         except Conversation.DoesNotExist:
             return False
 
-        return request.user in convo.participants.all()
+        return request.user in conversation.participants.all()

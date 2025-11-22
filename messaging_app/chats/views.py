@@ -47,7 +47,6 @@ class MessageViewSet(viewsets.ModelViewSet):
             conversation__id=conversation_id,
             conversation__participants=user
         )
-        return queryset
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
