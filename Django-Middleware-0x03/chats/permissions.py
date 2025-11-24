@@ -31,3 +31,9 @@ class IsParticipantOfConversation(permissions.BasePermission):
             return False
 
         return request.user in conversation.participants.all()
+class IsMessageOwnerOrParticipant(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return (
+            obj.sender == request.user or
+            obj.conversation.participants.filter(id=request.user.id).exists()
+        )
