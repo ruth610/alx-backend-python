@@ -1,0 +1,15 @@
+# POST http://127.0.0.1:8000/api/token/ HTTP/1.1
+# Content-Type: application/json
+
+# {
+#     "username": "admin",
+#     "password": "123456789"
+# }
+
+POST http://127.0.0.1:8000/api/messages/ HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzYzODMxMzY3LCJpYXQiOjE3NjM4MzEwNjcsImp0aSI6IjkwMjk0ZjNjMTFhYzQ1YzU5Mzk3NWRlZDUwZmUyNTMxIiwidXNlcl9pZCI6IjFhOWFjNmU2LTFjYzktNGY1Zi05NDE1LWZmZjljNTlmY2ZiOCJ9.B7N7IFUjz_CCzMLKcDxxYfzZxzeHqCS1bqIxiNsNaqY
+
+{
+    "message_body": "hello ruth ambaw"
+}

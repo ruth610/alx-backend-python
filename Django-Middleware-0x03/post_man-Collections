@@ -1,0 +1,99 @@
+from django.urls import reverse
+from rest_framework.test import APITestCase
+from rest_framework import status
+from chats.models import Conversation, Message, User
+
+class ConversationFlowTest(APITestCase):
+    def setUp(self):
+        # Create users
+        self.user1 = User.objects.create_user(
+            username="alice", password="pass123"
+        )
+        self.user2 = User.objects.create_user(
+            username="bob", password="pass123"
+        )
+        self.user3 = User.objects.create_user(
+            username="charlie", password="pass123"
+        )
+
+        # JWT login URL (change if different)
+        self.login_url = "/api/token/"
+
+        # Conversations endpoint
+        self.conversation_url = "/api/conversations/"
+        self.messages_url = "/api/messages/"
+
+    def authenticate(self, username, password):
+        """Returns JWT access token for a user."""
+        response = self.client.post(self.login_url, {
+            "username": username,
+            "password": password
+        })
+        self.assertEqual(response.status_code, 200)
+        token = response.data["access"]
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+
+    # -------------------------------------------------------------
+    # 1️⃣ Test creating a conversation
+    # -------------------------------------------------------------
+    def test_create_conversation(self):
+        self.authenticate("alice", "pass123")
+
+        response = self.client.post(self.conversation_url, {
+            "participants": [self.user1.id, self.user2.id]
+        })
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data["participants"]), 2)
+
+    # -------------------------------------------------------------
+    # 2️⃣ Test sending messages
+    # -------------------------------------------------------------
+    def test_sending_message(self):
+        # First create conversation
+        convo = Conversation.objects.create()
+        convo.participants.set([self.user1, self.user2])
+
+        self.authenticate("alice", "pass123")
+
+        response = self.client.post(self.messages_url, {
+            "conversation": convo.id,
+            "message_body": "Hello Bob!"
+        })
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Message.objects.count(), 1)
+        self.assertEqual(Message.objects.first().message_body, "Hello Bob!")
+
+    # -------------------------------------------------------------
+    # 3️⃣ Test fetching conversations (only user's conversations)
+    # -------------------------------------------------------------
+    def test_fetch_user_conversations(self):
+        convo = Conversation.objects.create()
+        convo.participants.set([self.user1, self.user2])
+
+        convo2 = Conversation.objects.create()
+        convo2.participants.set([self.user3])
+
+        self.authenticate("alice", "pass123")
+
+        response = self.client.get(self.conversation_url)
+
+        # user1 should only see convos they participate in
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], convo.id)
+
+    # -------------------------------------------------------------
+    # 4️⃣ Unauthorized user should NOT access private conversations
+    # -------------------------------------------------------------
+    def test_unauthorized_user_cannot_access(self):
+        convo = Conversation.objects.create()
+        convo.participants.set([self.user1, self.user2])
+
+        # User3 logs in, but is not part of conversation
+        self.authenticate("charlie", "pass123")
+
+        response = self.client.get(f"{self.messages_url}?conversation_id={convo.id}")
+
+        self.assertEqual(response.status_code, 403)
