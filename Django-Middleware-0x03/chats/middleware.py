@@ -81,3 +81,32 @@ class OffensiveLanguageMiddleware:
         if x_forwarded_for:
             return x_forwarded_for.split(',')[0]
         return request.META.get('REMOTE_ADDR')
+class RolePermissionMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+
+        # Only protect specific endpoints (optional, but recommended)
+        protected_paths = [
+            "/api/chats/",        # example: conversations
+            "/api/messages/",     # example: messages
+        ]
+
+        # Check only if path matches protected routes
+        if any(request.path.startswith(p) for p in protected_paths):
+
+            user = request.user
+
+            # If user is not authenticated → deny
+            if not user.is_authenticated:
+                return HttpResponseForbidden("You must be logged in to access this resource.")
+
+            # Check role on the user model
+            role = getattr(user, "role", None)
+
+            # Allow only admin or moderator
+            if role not in ["admin", "moderator"]:
+                return HttpResponseForbidden("Access denied: insufficient role permissions.")
+
+        return self.get_response(request)
