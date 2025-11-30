@@ -2,7 +2,18 @@ from django.db import models
 from django.contrib.auth.models import User
 
 # Create your models here.
-
+class UnreadMessagesManager(models.Manager):
+    """
+    Custom manager to get unread messages for a specific user.
+    Optimized with .only() to load minimal fields.
+    """
+    def unread_for_user(self, user):
+        return (
+            super()
+            .get_queryset()
+            .filter(receiver=user, read=False)
+            .only("id", "sender", "content", "timestamp")  # Optimization
+        )
 
 class Message(models.Model):
     sender = models.ForeignKey(
@@ -18,6 +29,8 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     edited = models.BooleanField(default=False) 
+    read = models.BooleanField(default=False)
+
     parent_message = models.ForeignKey(
         'self',
         null=True,
@@ -25,7 +38,8 @@ class Message(models.Model):
         related_name='replies',
         on_delete=models.CASCADE
     )
-
+    objects = models.Manager()
+    unread = UnreadMessagesManager()
     def __str__(self):
         return f"Message from {self.sender} to {self.receiver}"
     

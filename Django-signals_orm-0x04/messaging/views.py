@@ -23,7 +23,25 @@ def _build_thread(message):
         "edited": message.edited,
         "replies": [_build_thread(r) for r in message.replies.all()]
     }
+@login_required
+def unread_messages(request):
+    user = request.user
 
+    # Use the custom manager
+    unread = Message.unread.unread_for_user(user)
+
+    return JsonResponse({
+        "unread_count": unread.count(),
+        "messages": [
+            {
+                "id": msg.id,
+                "sender": msg.sender.username,
+                "content": msg.content,
+                "timestamp": msg.timestamp.isoformat(),
+            }
+            for msg in unread
+        ]
+    })
 
 @login_required
 def get_conversation(request, user_id):
