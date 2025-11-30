@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseNotAllowed
 from django.views.decorators.http import require_http_methods
+from django.shortcuts import render
+from django.views.decorators.cache import cache_page
 from .models import Message
 from django.contrib.auth.models import User
 
@@ -157,3 +159,16 @@ def unread_inbox(request):
 
     context = {"messages": unread_messages}
     return render(request, "messaging/unread_inbox.html", context)
+
+@cache_page(60)   # Cache for 60 seconds
+def conversation_messages(request, conversation_id):
+    messages = (
+        Message.objects
+        .filter(conversation_id=conversation_id)
+        .select_related("sender", "receiver")
+        .order_by("timestamp")
+    )
+
+    return render(request, "chats/conversation_messages.html", {
+        "messages": messages
+    })
