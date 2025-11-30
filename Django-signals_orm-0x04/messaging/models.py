@@ -22,7 +22,7 @@ class Message(models.Model):
     def __str__(self):
         return f"Message from {self.sender} to {self.receiver}"
     
-    
+
 class MessageHistory(models.Model):
     """
     Stores older versions of a message before edits.
@@ -30,6 +30,11 @@ class MessageHistory(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name="history")
     old_content = models.TextField()
     edited_at = models.DateTimeField(auto_now_add=True)
+    edited_by = models.ForeignKey(
+        User,
+        related_name='message_edited_by',
+        on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return f"History for Message {self.message.id} at {self.edited_at}"
