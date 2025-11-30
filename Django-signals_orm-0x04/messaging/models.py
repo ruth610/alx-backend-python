@@ -15,33 +15,24 @@ class UnreadMessagesManager(models.Manager):
             .only("id", "sender", "content", "timestamp")  # Optimization
         )
 
+
 class Message(models.Model):
-    sender = models.ForeignKey(
-        User,
-        related_name='sent_messages',
-        on_delete=models.CASCADE
-    )
-    reciever = models.ForeignKey(
-        User,
-        related_name='recieved_messages',
-        on_delete=models.CASCADE
-    )
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    edited = models.BooleanField(default=False) 
+
+    # NEW FIELD
     read = models.BooleanField(default=False)
 
-    parent_message = models.ForeignKey(
-        'self',
-        null=True,
-        blank=True,
-        related_name='replies',
-        on_delete=models.CASCADE
-    )
+    # DEFAULT MANAGER
     objects = models.Manager()
+
+    # CUSTOM UNREAD MANAGER
     unread = UnreadMessagesManager()
+
     def __str__(self):
-        return f"Message from {self.sender} to {self.receiver}"
+        return f"{self.sender} → {self.receiver}: {self.content[:20]}"
     
 
 class MessageHistory(models.Model):

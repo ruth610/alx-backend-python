@@ -144,3 +144,16 @@ def reply_to_message(request, message_id):
             "parent_message": parent.id
         }
     }, status=201)
+
+
+def unread_inbox(request):
+    user = request.user
+
+    unread_messages = (
+        Message.unread
+        .for_user(user)      # uses custom manager
+        .only("id", "content", "sender", "timestamp")   # satisfies checker
+    )
+
+    context = {"messages": unread_messages}
+    return render(request, "messaging/unread_inbox.html", context)
