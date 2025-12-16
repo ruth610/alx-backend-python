@@ -1,27 +1,22 @@
-# Use Python 3.10 base image
+# Run using: docker compose up --build -p 8000:8000
+
 FROM python:3.10
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Set working directory
 WORKDIR /app
 
-# Copy requirements first (for caching)
-COPY requirements.txt /app/
+RUN apt-get update && apt-get install -y \
+    default-libmysqlclient-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy project files
-COPY . /app/
+COPY . .
 
-# Expose Django default port
 EXPOSE 8000
 
-# Run Django development server
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-# Run the container using: docker run -p 8000:8000 messaging_app
-
