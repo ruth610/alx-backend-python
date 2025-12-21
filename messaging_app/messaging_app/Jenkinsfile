@@ -1,45 +1,57 @@
 pipeline {
     agent any
 
+    environment {
+        DOCKER_HUB_CREDS = credentials('docker-hub-creds')
+        IMAGE_NAME = "your-dockerhub-username/messaging-app"
+        IMAGE_TAG = "latest"
+    }
+
     stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Show Git Branch') {
             steps {
                 sh 'git branch'
             }
         }
 
-        stage('Checkout Code') {
-            steps {
-                git credentialsId: 'github-creds',
-                    url: 'https://github.com/alx/alx-backend-python.git'
-            }
-        }
-
         stage('Set Up Python Environment') {
-                    steps {
-                        sh '''
-                        python3 -m venv venv
-                        . venv/bin/activate
-                        pip install --upgrade pip
-                        pip install -r messaging_app/requirements.txt
-                        '''
-                    }
-                }
-                stage('Install Dependencies (ALX check)') {
             steps {
                 sh '''
-                # ALX checker expects pip3 install in Jenkinsfile
-                pip3 install --upgrade pip || true
+                python3 -m venv venv
+                venv/bin/python -m pip install --upgrade pip
+                venv/bin/python -m pip install -r messaging_app/requirements.txt
+                venv/bin/python -m pip install pytest
                 '''
             }
         }
 
-
         stage('Run Tests') {
             steps {
                 sh '''
-                . venv/bin/activate
-                pytest messaging_app --junitxml=report.xml
+                venv/bin/python -m pytest messaging_app/tests --junitxml=report.xml
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                docker build -t $IMAGE_NAME:$IMAGE_TAG messaging_app
+                '''
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                sh '''
+                echo $DOCKER_HUB_CREDS_PSW | docker login -u $DOCKER_HUB_CREDS_USR --password-stdin
+                docker push $IMAGE_NAME:$IMAGE_TAG
                 '''
             }
         }
